@@ -42,16 +42,6 @@ public class Canvas extends JComponent {
         }
     }
 
-    public void load(File file) {
-        try {
-            img = ImageIO.read(file);
-            g = (Graphics2D) img.getGraphics();
-        }
-
-        catch (IOException ex) {
-        }
-    }
-
     protected void paintComponent(Graphics g1) {
         if (img == null) {
             img = createImage(getSize().width, getSize().height);

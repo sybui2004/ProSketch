@@ -34,12 +34,11 @@ public class Draw {
             saveAsButton, rectangle, pencil, undoButton, redoButton;
     private JFileChooser fileChooser;
     private File file;
-//    private final Icon save = new ImageIcon(Objects.requireNonNull(getClass().getResource("C:\\Users\\MSI-PC\\Documents\\Java - ProPTIT\\ProSketch\\code\\bin\\save.png")));
-//    private final Icon undo = new ImageIcon(Objects.requireNonNull(getClass().getResource("C:\\Users\\MSI-PC\\Documents\\Java - ProPTIT\\ProSketch\\code\\bin\\undo.png")));
-//    private final Icon redo = new ImageIcon(Objects.requireNonNull(getClass().getResource("C:\\Users\\MSI-PC\\Documents\\Java - ProPTIT\\ProSketch\\code\\bin\\redo.png")));
-//    private final Icon pencilIcon = new ImageIcon(Objects.requireNonNull(getClass()
-//            .getResource("C:\\Users\\MSI-PC\\Documents\\Java - ProPTIT\\ProSketch\\code\\bin\\pencil.png")));
-//    private final Icon rect = new ImageIcon(Objects.requireNonNull(getClass().getResource("C:\\Users\\MSI-PC\\Documents\\Java - ProPTIT\\ProSketch\\code\\bin\\rect.png")));
+    private final Icon save = new ImageIcon("save.png");
+    private final Icon undo = new ImageIcon("undo.png");
+    private final Icon redo = new ImageIcon("redo.png");
+    private final Icon pencilIcon = new ImageIcon("pencil.png");
+    private final Icon rect = new ImageIcon("rect.png");
     private int saveCounter = 0;
     private JLabel filenameBar, thicknessStat;
     private JSlider thicknessSlider;
@@ -99,34 +98,15 @@ public class Draw {
                     filenameBar.setText(file.toString());
                     canvas.save(file);
                 }
-            } else if (event.getSource() == saveAsButton) {
-                saveCounter = 1;
-                fileChooser = new JFileChooser();
-                if (fileChooser.showSaveDialog(saveAsButton) == JFileChooser.APPROVE_OPTION) {
-                    file = fileChooser.getSelectedFile();
-                    filenameBar.setText(file.toString());
-                    canvas.save(file);
-                }
-            } else if (event.getSource() == loadButton) {
-                fileChooser = new JFileChooser();
-                if (fileChooser.showOpenDialog(loadButton) == JFileChooser.APPROVE_OPTION) {
-                    file = fileChooser.getSelectedFile();
-                    filenameBar.setText(file.toString());
-                    canvas.load(file);
-                }
-            } else if (event.getSource() == colorPicker) {
-                color = JColorChooser.showDialog(null, "Pick your color!",
-                        color);
-                if (color == null)
-                    color = (Color.WHITE);
-                canvas.picker(color);
             }
         }
     };
-    public void setWH(int width,int height){
+
+    public void setWH(int width, int height) {
         this.width = width;
         this.height = height;
     }
+
     public void openPaint() {
         for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
             if ("Nimbus".equals(info.getName())) {
@@ -141,7 +121,7 @@ public class Draw {
                 break;
             }
         }
-        JFrame frame = new JFrame("Paint ("+ width +"X" + height +")");
+        JFrame frame = new JFrame("Paint (" + width + "X" + height + ")");
         Container container = frame.getContentPane();
         container.setLayout(new BorderLayout());
         canvas = new Canvas();
@@ -155,10 +135,10 @@ public class Draw {
 
         panel1.setLayout(new FlowLayout());
 
-        //pencil = new JButton(pencilIcon);
+        pencil = new JButton(pencilIcon);
         pencil.setPreferredSize(new Dimension(40, 40));
         pencil.addActionListener(listener);
-        //rectangle = new JButton(rect);
+        rectangle = new JButton(rect);
         rectangle.setPreferredSize(new Dimension(40, 40));
         rectangle.addActionListener(listener);
         thicknessSlider = new JSlider(JSlider.HORIZONTAL, 0, 50, 1);
@@ -166,10 +146,10 @@ public class Draw {
         thicknessSlider.setPaintTicks(true);
         thicknessSlider.setPreferredSize(new Dimension(40, 40));
         thicknessSlider.addChangeListener(thick);
-        //undoButton = new JButton(undo);
+        undoButton = new JButton(undo);
         undoButton.setPreferredSize(new Dimension(20, 20));
         undoButton.addActionListener(listener);
-        //redoButton = new JButton(redo);
+        redoButton = new JButton(redo);
         redoButton.setPreferredSize(new Dimension(20, 20));
         redoButton.addActionListener(listener);
         blackButton = new JButton();
@@ -216,14 +196,8 @@ public class Draw {
         lightGrayButton.setBackground(Color.LIGHT_GRAY);
         lightGrayButton.setPreferredSize(new Dimension(40, 40));
         lightGrayButton.addActionListener(listener);
-        //saveButton = new JButton(save);
+        saveButton = new JButton(save);
         saveButton.addActionListener(listener);
-        saveAsButton = new JButton("Save As");
-        saveAsButton.addActionListener(listener);
-        loadButton = new JButton("Load");
-        loadButton.addActionListener(listener);
-        colorPicker = new JButton("Color Picker");
-        colorPicker.addActionListener(listener);
         clearButton = new JButton("Clear");
         clearButton.addActionListener(listener);
 
@@ -239,10 +213,6 @@ public class Draw {
         box.add(undoButton, BorderLayout.NORTH);
         box.add(Box.createVerticalStrut(5));
         box.add(redoButton, BorderLayout.NORTH);
-		/*box.add(Box.createVerticalStrut(5));
-		box.add(pencil, BorderLayout.NORTH);
-		box.add(Box.createVerticalStrut(5));
-		box.add(rectangle, BorderLayout.NORTH);*/
 
         panel.add(greenButton);
         panel.add(blueButton);
@@ -256,9 +226,6 @@ public class Draw {
         panel.add(cyanButton);
         panel.add(lightGrayButton);
         panel.add(saveButton);
-        panel.add(saveAsButton);
-        panel.add(loadButton);
-        panel.add(colorPicker);
         panel.add(clearButton);
 
         container.add(panel, BorderLayout.NORTH);
@@ -267,7 +234,7 @@ public class Draw {
 
         frame.setVisible(true);
 
-        frame.setSize(width+79,height+11);
+        frame.setSize(width + 79, height + 11);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
     }
