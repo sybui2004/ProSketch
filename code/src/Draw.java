@@ -85,19 +85,6 @@ public class Draw {
                 canvas.rect();
             } else if (event.getSource() == pencil) {
                 canvas.pencil();
-            } else if (event.getSource() == saveButton) {
-                if (saveCounter == 0) {
-                    fileChooser = new JFileChooser();
-                    if (fileChooser.showSaveDialog(saveButton) == JFileChooser.APPROVE_OPTION) {
-                        file = fileChooser.getSelectedFile();
-                        saveCounter = 1;
-                        filenameBar.setText(file.toString());
-                        canvas.save(file);
-                    }
-                } else {
-                    filenameBar.setText(file.toString());
-                    canvas.save(file);
-                }
             }
         }
     };
@@ -225,7 +212,7 @@ public class Draw {
         panel.add(pinkButton);
         panel.add(cyanButton);
         panel.add(lightGrayButton);
-        panel.add(saveButton);
+        //panel.add(saveButton);
         panel.add(clearButton);
 
         container.add(panel, BorderLayout.NORTH);
