@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class FileHandling {
-    Stage stage;
+    private final Stage stage;
 
     public FileHandling(Stage stage) {
         this.stage = stage;

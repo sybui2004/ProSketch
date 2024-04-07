@@ -1,39 +1,24 @@
 package app.model.shapes;
 
-import app.model.typeEnum.ShapeType;
-import app.model.ShapeFX;
+import app.model.StatusCanvas;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.input.MouseEvent;
 
-public class Circle extends ShapeFX {
+import java.util.Stack;
 
-    public Circle(double startX, double startY, Color color) {
-        super(startX, startY, color, ShapeType.CIRCLE);
+public class Circle{
+
+    private void drawCircle(double startX, double startY, double endX, double endY, Canvas canvas, Stack<StatusCanvas> undoStack, GraphicsContext gc) {
+        double radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        gc.drawImage(undoStack.peek().getImage(), 0, 0);
+        gc.strokeOval(startX - radius, startY - radius, radius * 2, radius * 2);
     }
 
-    @Override
-    public double getWidth() {
-        return Math.min(super.getWidth(), super.getHeight());
+    public void setEventMouseDragged(GraphicsContext gc, double preX, double preY, MouseEvent e, Stack<StatusCanvas> undoStack, Canvas canvas) {
+        gc.drawImage(undoStack.peek().getImage(), 0, 0);
+        drawCircle(preX, preY, e.getX(), e.getY(), canvas, undoStack, gc);
     }
 
-    @Override
-    public double getHeight() {
-        return Math.min(super.getWidth(), super.getHeight());
-    }
-
-    @Override
-    public void drawShape(GraphicsContext gc, double drawX, double drawY, double drawWidth, double drawHeight, boolean isSelected) {
-        gc.fillOval(drawX, drawY, drawWidth, drawHeight);
-        gc.strokeOval(drawX, drawY, drawWidth, drawHeight);
-
-    }
-
-    @Override
-    public boolean contains(double hitX, double hitY) {
-        double radius = getWidth() / 2;
-        double centreX = getStartingPointX() + getWidth() / 2;
-        double centreY = getStartingPointY() + getHeight() / 2;
-        double distanceHitFromCenter = ShapeFX.getDistanceBetweenTwoPoints(centreX, centreY, hitX, hitY);
-        return distanceHitFromCenter <= (radius + 0.0001f);
-    }
 }

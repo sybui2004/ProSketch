@@ -580,7 +580,7 @@
                      </GridPane.margin>
                   </Label>
                   <Label fx:id="zoomLabel" text="100%" GridPane.columnIndex="3" />
-                  <Slider fx:id="ScaleSlider" blockIncrement="25.0" max="200.0" maxWidth="200.0" min="25.0" minorTickCount="0" prefHeight="14.0" prefWidth="50.0" showTickMarks="true" snapToTicks="true" value="100.0" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.hgrow="NEVER" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
+                  <Slider fx:id="scaleSlider" blockIncrement="25.0" max="200.0" maxWidth="200.0" min="25.0" minorTickCount="0" prefHeight="14.0" prefWidth="50.0" showTickMarks="true" snapToTicks="true" value="100.0" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.hgrow="NEVER" GridPane.valignment="CENTER" GridPane.vgrow="NEVER">
                      <GridPane.margin>
                         <Insets left="40.0" right="40.0" top="5.0" />
                      </GridPane.margin>

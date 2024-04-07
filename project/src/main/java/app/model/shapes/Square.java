@@ -1,20 +1,14 @@
 package app.model.shapes;
 
-import app.model.typeEnum.ShapeType;
-import javafx.scene.paint.Color;
+import app.model.StatusCanvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseEvent;
 
-public class Square extends Rectangle {
+import java.util.Stack;
 
-    public Square(double startX, double startY, Color color) {
-        super(startX,startY,color, ShapeType.SQUARE);
-    }
-
-    @Override
-    public double getWidth() {
-        return Math.min(super.getWidth(),super.getHeight());
-    }
-    @Override
-    public double getHeight() {
-        return Math.min(super.getWidth(),super.getHeight());
+public class Square {
+    public void setEventMouseDragged(GraphicsContext gc, double preX, double preY, MouseEvent e, Stack<StatusCanvas> undoStack) {
+        gc.drawImage(undoStack.peek().getImage(), 0, 0);
+        gc.strokeRect(preX, preY, Math.abs(e.getX() - preX), Math.abs(e.getX() - preX));
     }
 }

@@ -1,119 +1,99 @@
 package app.controller;
 
+import app.model.FileHandling;
+import app.model.StatusCanvas;
+import app.model.shapes.*;
+import app.model.shapes.Rectangle;
+import app.model.tools.Brush;
+import app.model.tools.Eraser;
+import app.model.tools.Filler;
+import app.model.tools.Pencil;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.Cursor;
+import javafx.scene.Group;
+import javafx.scene.ImageCursor;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Objects;
 import java.util.Stack;
-
-import app.model.StatusCanvas;
-import app.model.FileHandling;
-import app.model.Pixel;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.scene.image.Image;
-import javafx.scene.control.Slider;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.image.PixelReader;
-import javafx.scene.image.WritableImage;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.ArcType;
-import javafx.stage.Stage;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.Cursor;
-import javafx.scene.Group;
-import javafx.scene.ImageCursor;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ColorPicker;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 
 public class DrawingController {
 
     @FXML
-    Slider ScaleSlider;
+    private Slider scaleSlider;
     @FXML
-    Label pixel;
+    private Label pixel, fileName,canvasWidthHeight, zoomLabel;
     @FXML
-    Label fileName;
+    private AnchorPane BigAnchor, CanvasAnchor;
     @FXML
-    Label canvasWidthHeight;
+    private Canvas canvas;
     @FXML
-    Label zoomLabel;
+    private ScrollPane scrollPane;
     @FXML
-    AnchorPane BigAnchor, CanvasAnchor;
+    private Group group;
     @FXML
-    Canvas canvas;
+    private Button pencilBtn, brushBtn, eraserBtn,fillBtn, searchBtn, rectBtn, squareBtn, roundedRectBtn, ovalBtn, circleBtn, lineBtn, undoBtn, redoBtn;
     @FXML
-    ScrollPane scrollPane;
+    private ComboBox<String> sizeCombo;
     @FXML
-    Group group;
+    private ColorPicker colorPicker;
     @FXML
-    Button pencilBtn;
-    @FXML
-    Button brushBtn;
-    @FXML
-    Button eraserBtn;
-    @FXML
-    Button fillBtn;
-    @FXML
-    Button searchBtn;
-    @FXML
-    Button rectBtn;
-    @FXML
-    Button squareBtn;
-    @FXML
-    Button roundedRectBtn;
-    @FXML
-    Button ovalBtn;
-    @FXML
-    Button circleBtn;
-    @FXML
-    Button lineBtn;
-    @FXML
-    Button undoBtn;
-    @FXML
-    Button redoBtn;
-    @FXML
-    ComboBox<String> sizeCombo;
-    @FXML
-    ColorPicker colorPicker;
-    @FXML
-    TextField heightTextField, widthTextField;
-    boolean zoomLocked = true, statusFile = false;
-    Button[] tools;
-    Cursor cursor;
-    String selectedTool = "";
-    GraphicsContext gc;
-    double prevX, prevY;
-    Stack<StatusCanvas> undoStack;
-    Stack<StatusCanvas> redoStack;
-    int SizeVal = 1;
-    Color color;
-    File file;
+    private TextField heightTextField, widthTextField;
+    private Button[] tools;
+    private Cursor cursor;
+    private String selectedTool = "";
+    public GraphicsContext gc;
+    public double preX, preY;
+    public Stack<StatusCanvas> undoStack;
+    public Stack<StatusCanvas> redoStack;
+    private Brush brush;
+    private Pencil pencil;
+    private Eraser eraser;
+    private Filler filler;
+    private Rectangle rect;
+    private Square square;
+    private RoundedRect roundedRect;
+    private Oval oval;
+    private Circle circle;
+    private Line line;
+    public int sizeVal = 1;
+    public Color color;
+    private File file;
 
     public void initialize() {
         gc = canvas.getGraphicsContext2D();
         this.tools = new Button[]{pencilBtn, brushBtn, eraserBtn, fillBtn, searchBtn, rectBtn, squareBtn, roundedRectBtn, ovalBtn, circleBtn, lineBtn};
+
+        initializeStatus();
+        initializeTools();
+        initializeShapes();
+        initializePinchZoom();
+        initializeColors();
+        initializeSizes();
+        setUpDrawEvents();
         linkedSize();
         linkedZoom();
         linkedMouseXY();
         getCanvasHeightWidth();
-        initializePinchZoom();
-        initializeColors();
-        initializeSizes();
-        SetUpDrawEvents();
-        initializeStatus();
         disableRedoUndo();
     }
 
@@ -123,15 +103,23 @@ public class DrawingController {
         undoStack.add(new StatusCanvas(canvas.snapshot(null, null)));
     }
 
-
-    private void drawCircle(double startX, double startY, double endX, double endY) {
-        double radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        gc.drawImage(undoStack.peek().getImage(), 0, 0);
-        gc.strokeOval(startX - radius, startY - radius, radius * 2, radius * 2);
+    private void initializeTools() {
+        brush = new Brush();
+        pencil = new Pencil();
+        eraser = new Eraser();
+        filler = new Filler();
     }
 
-    private void SetUpDrawEvents() {
+    private void initializeShapes() {
+        rect = new Rectangle();
+        square = new Square();
+        roundedRect = new RoundedRect();
+        oval = new Oval();
+        circle = new Circle();
+        line = new Line();
+    }
+
+    private void setUpDrawEvents() {
         canvas.setOnMousePressed((e) -> {
             if (selectedTool.isEmpty()) return;
             if (e.isPrimaryButtonDown()) {
@@ -140,91 +128,72 @@ public class DrawingController {
             }
             switch (selectedTool) {
                 case "pencil":
-                    prevX = e.getX();
-                    prevY = e.getY();
-                    gc.strokeLine(prevX, prevY, prevX, prevY);
+                    preX = e.getX();
+                    preY = e.getY();
+                    pencil.setEventMousePressed(preX, preY, gc);
                     break;
                 case "brush":
-                    prevX = e.getX();
-                    prevY = e.getY();
-                    gc.fillArc(e.getX() - SizeVal, e.getY() - SizeVal, SizeVal, SizeVal, 0, 360, ArcType.ROUND);
+                    preX = e.getX();
+                    preY = e.getY();
+                    brush.setEventMousePressed(sizeVal, gc, e);
                     break;
                 case "eraser":
-                    prevX = e.getX();
-                    prevY = e.getY();
-                    gc.setFill(Color.WHITE);
-                    gc.setStroke(Color.WHITE);
-                    gc.fillRect(e.getX(), e.getY(), SizeVal, SizeVal);
+                    preX = e.getX();
+                    preY = e.getY();
+                    eraser.setEventMousePressed(sizeVal, gc, e);
                     break;
                 case "fill":
-                    if (e.isPrimaryButtonDown()) bucketFill((int) e.getX(), (int) e.getY(), color);
+                    filler.setEventMousePressed(e, color, canvas, gc);
                     break;
                 case "search":
                     colorPicker.setValue(canvas.snapshot(null, null).getPixelReader().getColor((int) e.getX(), (int) e.getY()));
                     changeColor();
                     break;
                 case "square", "roundrect", "oval", "line", "circle", "rect":
-                    prevX = e.getX();
-                    prevY = e.getY();
+                    preX = e.getX();
+                    preY = e.getY();
                     break;
             }
         });
-
         canvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, (e) -> {
             if (selectedTool.isEmpty()) return;
             if (e.isPrimaryButtonDown()) {
                 gc.setFill(color);
                 gc.setStroke(color);
             }
-
             switch (selectedTool) {
                 case "pencil":
-                    gc.strokeLine(prevX, prevY, e.getX(), e.getY());
-                    prevX = e.getX();
-                    prevY = e.getY();
+                    pencil.setEventMouseDragged(preX, preY, e.getX(), e.getY(), gc);
+                    preX = e.getX();
+                    preY = e.getY();
                     break;
                 case "brush":
-                    if (Math.abs(e.getX() - prevX) > Math.max(SizeVal / 2, 1) || Math.abs(e.getY() - prevY) > Math.max(SizeVal / 2, 1)) {
-                        drawExtraPoints(prevX, prevY, e.getX(), e.getY());
-                    }
-                    gc.fillArc(e.getX() - SizeVal, e.getY() - SizeVal, SizeVal, SizeVal, 0, 360, ArcType.ROUND);
-                    prevX = e.getX();
-                    prevY = e.getY();
+                    brush.setEventMouseDragged(preX, preY, sizeVal, gc, e);
+                    preX = e.getX();
+                    preY = e.getY();
                     break;
                 case "eraser":
-                    gc.setFill(Color.WHITE);
-                    gc.setStroke(Color.WHITE);
-                    gc.fillRect(e.getX(), e.getY(), SizeVal, SizeVal);
-                    if (Math.abs(e.getX() - prevX) > Math.max(SizeVal / 2, 1) || Math.abs(e.getY() - prevY) > Math.max(SizeVal / 2, 1)) {
-                        deleteExtraPoints(prevX, prevY, e.getX(), e.getY());
-                    }
-                    prevX = e.getX();
-                    prevY = e.getY();
+                    eraser.setEventMouseDragged(sizeVal, preX, preY, gc, e);
+                    preX = e.getX();
+                    preY = e.getY();
                     break;
                 case "rect":
-                    gc.drawImage(undoStack.peek().getImage(), 0, 0);
-                    gc.strokeRect(prevX, prevY, Math.abs(e.getX() - prevX), Math.abs(e.getY() - prevY));
+                    rect.setEventMouseDragged(gc, preX, preY, e, undoStack);
                     break;
                 case "roundrect":
-                    gc.drawImage(undoStack.peek().getImage(), 0, 0);
-                    gc.strokeRoundRect(prevX, prevY, Math.abs(e.getX() - prevX), Math.abs(e.getY() - prevY), Math.min(Math.abs(e.getX() - prevX) / 5, 50), Math.min(Math.abs(e.getX() - prevX) / 5, 50));
+                    roundedRect.setEventMouseDragged(gc, preX, preY, e, undoStack);
                     break;
                 case "oval":
-                    gc.drawImage(undoStack.peek().getImage(), 0, 0);
-                    gc.strokeOval(prevX, prevY, Math.abs(e.getX() - prevX), Math.abs(e.getY() - prevY));
+                    oval.setEventMouseDragged(gc, preX, preY, e, undoStack);
                     break;
                 case "circle":
-                    gc.drawImage(undoStack.peek().getImage(), 0, 0);
-                    drawCircle(prevX, prevY, e.getX(), e.getY());
+                    circle.setEventMouseDragged(gc, preX, preY, e, undoStack, canvas);
                     break;
                 case "line":
-                    gc.drawImage(undoStack.peek().getImage(), 0, 0);
-                    gc.strokeLine(prevX, prevY, e.getX(), e.getY());
+                    line.setEventMouseDragged(gc, preX, preY, e, undoStack);
                     break;
                 case "square":
-                    gc.drawImage(undoStack.peek().getImage(), 0, 0);
-                    gc.strokeRect(prevX, prevY, Math.abs(e.getX() - prevX), Math.abs(e.getX() - prevX));
-
+                    square.setEventMouseDragged(gc, preX, preY, e, undoStack);
                 default:
                     break;
             }
@@ -235,66 +204,9 @@ public class DrawingController {
                 redoStack = new Stack<>();
                 disableRedoUndo();
             }
-
         });
     }
 
-    private void bucketFill(int x, int y, Color fillColor) {
-        WritableImage snapshot = canvas.snapshot(null, null);
-        PixelReader pixelReader = snapshot.getPixelReader();
-        LinkedList<Pixel> queue = new LinkedList<>();
-        queue.addLast(new Pixel(x, y));
-        while (!queue.isEmpty()) {
-            Pixel currentPixel = queue.pop();
-            Color pixelColor = pixelReader.getColor(currentPixel.getX(), currentPixel.getY());
-            if (!pixelColor.equals(fillColor)) {
-                snapshot.getPixelWriter().setColor(currentPixel.getX(), currentPixel.getY(), fillColor);
-                ArrayList<Pixel> neighbors = getPixelNeighbors(currentPixel.getX(), currentPixel.getY(), snapshot);
-                for (var neighbor : neighbors) {
-                    if (pixelReader.getColor(neighbor.getX(), neighbor.getY()).equals(pixelColor))
-                        queue.addLast(neighbor);
-                }
-            }
-        }
-        gc.drawImage(snapshot, 0, 0);
-    }
-
-    private ArrayList<Pixel> getPixelNeighbors(int x, int y, WritableImage image) {
-        ArrayList<Pixel> neighbors = new ArrayList<>();
-        if (x > 0) neighbors.add(new Pixel(x - 1, y));
-        if (x < image.getWidth() - 1) neighbors.add(new Pixel(x + 1, y));
-        if (y > 0) neighbors.add(new Pixel(x, y - 1));
-        if (y < image.getHeight() - 1) neighbors.add(new Pixel(x, y + 1));
-
-        return neighbors;
-    }
-
-    private void drawExtraPoints(double prevX, double prevY, double x, double y) {
-        if (Math.abs(x - prevX) > Math.max(SizeVal / 2, 1) || Math.abs(y - prevY) > Math.max(SizeVal / 2, 1)) {
-            double newX = (int) ((x + prevX) / 2);
-            double newY = (int) ((y + prevY) / 2);
-
-            gc.fillArc(newX - SizeVal, newY - SizeVal, SizeVal, SizeVal, 0, 360, ArcType.ROUND);
-
-            drawExtraPoints(prevX, prevY, newX, newY);
-            drawExtraPoints(newX, newY, x, y);
-        }
-    }
-
-    private void deleteExtraPoints(double prevX, double prevY, double x, double y) {
-        if (Math.abs(x - prevX) > Math.max(SizeVal / 2, 1) || Math.abs(y - prevY) > Math.max(SizeVal / 2, 1)) {
-
-            double newX = (int) ((x + prevX) / 2);
-            double newY = (int) ((y + prevY) / 2);
-
-            gc.setFill(Color.WHITE);
-            gc.setStroke(Color.WHITE);
-            gc.fillRect(newX, newY, SizeVal, SizeVal);
-
-            deleteExtraPoints(prevX, prevY, newX, newY);
-            deleteExtraPoints(newX, newY, x, y);
-        }
-    }
 
     private void initializeSizes() {
         ObservableList<String> options = FXCollections.observableArrayList("1 px", "3 px", "5 px", "8 px", "15 px");
@@ -312,16 +224,16 @@ public class DrawingController {
     private void initializePinchZoom() {
         BigAnchor.setOnScroll((e) -> {
             if (e.isControlDown()) {
-                if (e.getDeltaY() < 0) ScaleSlider.adjustValue(ScaleSlider.getValue() - 25);
+                if (e.getDeltaY() < 0) scaleSlider.adjustValue(scaleSlider.getValue() - 25);
 
-                if (e.getDeltaY() > 0) ScaleSlider.adjustValue(ScaleSlider.getValue() + 25);
+                if (e.getDeltaY() > 0) scaleSlider.adjustValue(scaleSlider.getValue() + 25);
             }
         });
         CanvasAnchor.setOnScroll((e) -> {
             if (e.isControlDown()) {
-                e.consume(); // prevent scrolling while zooming
-                if (e.getDeltaY() < 0) ScaleSlider.adjustValue(ScaleSlider.getValue() - 25);
-                if (e.getDeltaY() > 0) ScaleSlider.adjustValue(ScaleSlider.getValue() + 25);
+                e.consume(); // preent scrolling while zooming
+                if (e.getDeltaY() < 0) scaleSlider.adjustValue(scaleSlider.getValue() - 25);
+                if (e.getDeltaY() > 0) scaleSlider.adjustValue(scaleSlider.getValue() + 25);
             }
         });
     }
@@ -347,17 +259,24 @@ public class DrawingController {
     }
 
     private void linkedZoom() {
-        ScaleSlider.valueProperty().addListener((e) -> {
-            if (!zoomLocked || ScaleSlider.getValue() % 25 == 0) {
-                zoomLabel.setText((int) (ScaleSlider.getValue()) + "%");
-                double zoom = ScaleSlider.getValue() / 100.0;
+        scaleSlider.valueProperty().addListener((e) -> {
+                zoomLabel.setText((int) (scaleSlider.getValue()) + "%");
+                double zoom = scaleSlider.getValue() / 100.0;
                 group.setScaleX(zoom);
                 group.setScaleY(zoom);
-            }
         });
 
         canvas.setOnMouseEntered((e) -> BigAnchor.setCursor(cursor));
         canvas.setOnMouseExited((e) -> BigAnchor.setCursor(Cursor.DEFAULT));
+    }
+
+    @FXML
+    public void newFile() {
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        fileName.setText("Not Saved yet");
+        file = null;
+        initializeStatus();
+        disableRedoUndo();
     }
 
     @FXML
@@ -442,7 +361,7 @@ public class DrawingController {
         disableRedoUndo();
     }
 
-    public void disableRedoUndo() {
+    private void disableRedoUndo() {
         redoBtn.setDisable(redoStack.isEmpty());
         undoBtn.setDisable(undoStack.size() < 2);
     }
@@ -455,14 +374,6 @@ public class DrawingController {
         }
     }
 
-    @FXML
-    public void newFile() {
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        fileName.setText("Not Saved yet");
-        file = null;
-        initializeStatus();
-        disableRedoUndo();
-    }
 
     @FXML
     public void selectTool(MouseEvent event) {
@@ -503,8 +414,8 @@ public class DrawingController {
 
     @FXML
     public void changeSize() {
-        SizeVal = Integer.parseInt(sizeCombo.getValue().substring(0, sizeCombo.getValue().indexOf(" ")));
-        gc.setLineWidth(SizeVal);
+        sizeVal = Integer.parseInt(sizeCombo.getValue().substring(0, sizeCombo.getValue().indexOf(" ")));
+        gc.setLineWidth(sizeVal);
     }
 
     @FXML
@@ -512,7 +423,7 @@ public class DrawingController {
         color = colorPicker.getValue();
     }
 
-    static public boolean compareImages(Image img1, Image img2) {
+    public static boolean compareImages(Image img1, Image img2) {
         for (int i = 0; i < img1.getWidth(); i++) {
             for (int j = 0; j < img1.getHeight(); j++) {
                 if (!img1.getPixelReader().getColor(i, j).equals(img2.getPixelReader().getColor(i, j))) return false;
@@ -552,7 +463,7 @@ public class DrawingController {
             CanvasAnchor.setPrefHeight(h);
             CanvasAnchor.setPrefWidth(w);
             getCanvasHeightWidth();
-            double zoom = ScaleSlider.getValue() / 100.0;
+            double zoom = scaleSlider.getValue() / 100.0;
             group.setScaleX(zoom + 0.01);
             group.setScaleY(zoom + 0.01);
             Thread.sleep(1);
